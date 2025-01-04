@@ -110,6 +110,7 @@ def main():
                     grid_y = mouse_x // square_size
                     if 0 <= grid_x < 9 and 0 <= grid_y < 9: # check if the mouse is over the board
                         # TODO: Add a def of each piece movement
+                        # Issue URL: https://github.com/kleszczuch/pShogi/issues/14
                         selected_piece["pos"] = [grid_x, grid_y]
                         piece_name = selected_piece["piece"]
                         game.board[selected_piece["pos"][0]][selected_piece["pos"][1]] = piece_name # move the piece to the new position
