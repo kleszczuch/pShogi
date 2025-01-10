@@ -220,7 +220,7 @@ def main():
                         valid_move = False
                         if piece_name.endswith("Pawn"):
                             pawn = Pawn(color)
-                            new_pos = pawn.move(selected_piece["pos"], game.board)
+                            new_pos = pawn.move(selected_piece["pos"])
                             valid_move = new_pos == (grid_x, grid_y)
                         elif piece_name.endswith("Knight"):
                             knight = Knight(color)
