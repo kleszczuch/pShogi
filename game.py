@@ -9,6 +9,12 @@ from PiecesMoves.King import King
 from PiecesMoves.Rook import Rook
 from PiecesMoves.Bishop import Bishop
 
+WIDTH, HEIGHT = 900, 720
+screen = pygame.display.set_mode([WIDTH, HEIGHT])
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+
 class GameState:
     
     def __init__(self):
@@ -39,6 +45,16 @@ class GameState:
                         "pos": [row, col]
                     })
         return pieces
+def load_images():
+    pieces = [
+        "wLance", "wKnight", "wSilver", "wGold", "wKing", "wRook", "wBishop", "wPawn",
+        "bLance", "bKnight", "bSilver", "bGold", "bKing", "bRook", "bBishop", "bPawn"
+    ]
+    images = {}  # dictionary of images to be able to use them in the draw board function
+    for piece in pieces:
+        images[piece] = pygame.image.load(f"images/{piece}.png")
+    return images
+
 
 def draw_board(game, images):
     background_path = "images/background.png"
@@ -57,6 +73,28 @@ def draw_board(game, images):
             piece = game.board[row][col]
             if piece != " ":
                 draw_piece(game, piece, row, col, square_size, images)
+
+def draw_matrices(game):
+    background_path = "images/backbackground.png"
+    background = pygame.image.load(background_path) # load the background image
+    square_size = 80
+    for row in range(9):
+        for col in range(2):
+            game.screen.blit(background, (col * square_size, row * square_size)) # adding background to every square
+            pygame.draw.rect( # painting boarder
+                game.screen,
+                (0, 0, 0),  
+                pygame.Rect(col * square_size, row * square_size, square_size, square_size), 2
+            )
+def draw_scene():
+    screen.fill(WHITE)
+    draw_matrices()
+    draw_board()
+
+def draw_piece(game, piece, row, col, square_size, images):
+    if piece in images:
+        piece_image = pygame.transform.scale(images[piece], (square_size, square_size))
+        game.screen.blit(piece_image, (col * square_size, row * square_size))  # draw a piece on the screen
                 
 def is_valid_move(game, color, target_pos):
     target_piece = game.board[target_pos[0]][target_pos[1]]
@@ -68,40 +106,27 @@ def is_valid_move(game, color, target_pos):
         return False
     return True
 
-def get_all_valid_moves(piece, pos, board):
-    """
-    Zwraca wszystkie możliwe ruchy dla danej figury.
-    piece: nazwa figury
-    pos: pozycja figury na planszy
-    board: lista reprezentująca planszę
-    """
-    valid_moves = ["hgfgh"]
-    color = piece[0]
-    if piece.endswith("Pawn"):
-        pawn = Pawn(color)
-        valid_moves = pawn.move(pos)
-    elif piece.endswith("Knight"):
-        knight = Knight(color)
-        valid_moves = knight.move(pos)
-    elif piece.endswith("Lance"):
-        lance = Lance(color)
-        valid_moves = lance.move(pos, board)
-    elif piece.endswith("Silver"):
-        silver = SilverGeneral(color)
-        valid_moves = silver.move(pos)
-    elif piece.endswith("Gold"):
-        gold = GoldGeneral(color)
-        valid_moves = gold.move(pos)
-    elif piece.endswith("King"):
-        king = King(color)
-        valid_moves = king.move(pos)
-    elif piece.endswith("Rook"):
-        rook = Rook(color)
-        valid_moves = rook.move(pos, board)
-    elif piece.endswith("Bishop"):
-        bishop = Bishop(color)
-        valid_moves = bishop.move(pos, board)
-    return valid_moves if valid_moves is not None else []
+def get_all_valid_moves(piece_name, pos, board):
+    type, color = piece_name[1:], piece_name[0]
+    color = 'white' if color == 'w' else 'black'
+
+    piece_classes = {
+        "Pawn": Pawn,
+        "Knight": Knight,
+        "Lance": Lance,
+        "Silver": SilverGeneral,
+        "Gold": GoldGeneral,
+        "King": King,
+        "Rook": Rook,
+        "Bishop": Bishop
+    }
+
+    piece_class = piece_classes.get(type)
+    if not piece_class:
+        return []
+
+    piece = piece_class(color)
+    return piece.move(pos, board)
 
 def simulate_move(board, start_pos, end_pos):
     """
@@ -158,27 +183,39 @@ def is_checkmate(board, king_color):
                             return False
     return True    
   
+def move_piece(game, selected_piece, end_pos):
+    piece_name = selected_piece["piece"]
+    start_pos = selected_piece["pos"]
+    color = 'white' if piece_name.startswith('w') else 'black'
 
-def load_images():
-    pieces = [
-        "wLance", "wKnight", "wSilver", "wGold", "wKing", "wRook", "wBishop", "wPawn",
-        "bLance", "bKnight", "bSilver", "bGold", "bKing", "bRook", "bBishop", "bPawn"
-    ]
-    images = {}  # dictionary of images to be able to use them in the draw board function
-    for piece in pieces:
-        images[piece] = pygame.image.load(f"images/{piece}.png")
-    return images
+    piece_classes = {
+        "Pawn": Pawn,
+        "Knight": Knight,
+        "Lance": Lance,
+        "Silver": SilverGeneral,
+        "Gold": GoldGeneral,
+        "King": King,
+        "Rook": Rook,
+        "Bishop": Bishop,
+    }
 
-def draw_piece(game, piece, row, col, square_size, images):
-    if piece in images:
-        piece_image = images[piece]
-        piece_image = pygame.transform.scale(piece_image, (square_size, square_size))
-        game.screen.blit(piece_image, (col * square_size, row * square_size))  # draw a piece on the screen
+    piece_type = piece_name[1:]  # Get piece type, e.g., "Pawn", "Knight"
+    piece_class = piece_classes.get(piece_type)
+ 
+    piece = piece_class(color)
+    possible_moves = piece.move(start_pos, game.board)
+    if end_pos in possible_moves:
+        # Perform the move
+        game.board[start_pos[0]][start_pos[1]] = " "
+        game.board[end_pos[0]][end_pos[1]] = piece_name
+        return True
+
+    print(f"Invalid move for {piece_name} to {end_pos}")
+    return False
+
 
 def main():
     pygame.init()
-    WIDTH, HEIGHT = 720, 720
-    screen = pygame.display.set_mode([WIDTH, HEIGHT])
     pygame.display.set_caption('pShogi - Shogi-Dogi')
     timer = pygame.time.Clock()
     fps = 60
@@ -190,89 +227,55 @@ def main():
     dragging = False
     selected_piece = None
     square_size = 80
+    turn = 'w'
 
     running = True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_x, mouse_y = event.pos
+                grid_x = mouse_y // square_size
+                grid_y = mouse_x // square_size
                 for piece in game.get_piece_pos():
-                    row, col = piece["pos"]
-                    piece_rect = pygame.Rect(col * square_size, row * square_size, square_size, square_size)
-                    piece_to_be_deleted = piece["pos"]
-                    if piece_rect.collidepoint(mouse_x, mouse_y):
-                        dragging = True
-                        selected_piece = piece
-                        print(f"Selected piece: {selected_piece}")
+                    if piece["pos"] == [grid_x, grid_y]:
+                        if piece["piece"][0] == turn:
+                            dragging = True
+                            selected_piece = piece
+                            print(f"Selected piece: {selected_piece}")
                         break
+
             elif event.type == pygame.MOUSEBUTTONUP:
-                if dragging:
+                if dragging and selected_piece:
                     mouse_x, mouse_y = event.pos
                     grid_x = mouse_y // square_size
                     grid_y = mouse_x // square_size
-                    print(f"Mouse released at: ({grid_x}, {grid_y})")
-                    if 0 <= grid_x < 9 and 0 <= grid_y < 9:
-                        piece_name = selected_piece["piece"]
-                        color = 'white' if piece_name.startswith('w') else 'black'
-                        new_pos = None
-                        valid_move = False
-                        if piece_name.endswith("Pawn"):
-                            pawn = Pawn(color)
-                            new_pos = pawn.move(selected_piece["pos"])
-                            valid_move = new_pos == (grid_x, grid_y)
-                        elif piece_name.endswith("Knight"):
-                            knight = Knight(color)
-                            new_pos = knight.move(selected_piece["pos"])
-                            valid_move = (grid_x, grid_y) in new_pos
-                        elif piece_name.endswith("Lance"):
-                            lance = Lance(color)
-                            new_pos = lance.move(selected_piece["pos"], game.board)
-                            valid_move = (grid_x, grid_y) in new_pos
-                        elif piece_name.endswith("Silver"):
-                            silver = SilverGeneral(color)
-                            new_pos = silver.move(selected_piece["pos"])
-                            valid_move = (grid_x, grid_y) in new_pos
-                        elif piece_name.endswith("Gold"):
-                            gold = GoldGeneral(color)
-                            new_pos = gold.move(selected_piece["pos"])
-                            valid_move = (grid_x, grid_y) in new_pos
-                        elif piece_name.endswith("King"):
-                            king = King(color)
-                            new_pos = king.move(selected_piece["pos"])
-                            valid_move = (grid_x, grid_y) in new_pos
-                        elif piece_name.endswith("Rook"):
-                            rook = Rook(color)
-                            new_pos = rook.move(selected_piece["pos"], game.board)
-                            valid_move = (grid_x, grid_y) in new_pos
-                        elif piece_name.endswith("Bishop"):
-                            bishop = Bishop(color)
-                            new_pos = bishop.move(selected_piece["pos"], game.board)
-                            print(f"Bishop possible moves: {new_pos}")
-                            valid_move = (grid_x, grid_y) in new_pos
-                        
-                        print(f"Attempting to move {piece_name} from {selected_piece['pos']} to {new_pos}")
-                        if valid_move and is_valid_move(game, color, (grid_x, grid_y)):
-                            print(f"Moved {piece_name} to {(grid_x, grid_y)}")
-                            game.board[grid_x][grid_y] = piece_name
-                            game.board[piece_to_be_deleted[0]][piece_to_be_deleted[1]] = " "
-                            if is_in_check(game.board, 'w'):
-                                print("White king is in check!")
-                            if is_in_check(game.board, 'b'):
-                                print("Black king is in check!")
-                            
-                        else:
-                            print(f"Invalid move for {piece_name} to {(grid_x, grid_y)}")
-                        dragging = False
-                        selected_piece = None
-        screen.fill((255, 255, 255))
+                    end_pos = (grid_x, grid_y)
+
+                    print(f"Attempting to move to {end_pos}")
+                    if move_piece(game, selected_piece, end_pos):
+                        turn = 'b' if turn == 'w' else 'w'
+                        print(f"Moved {selected_piece['piece']} to {end_pos}")
+                    else:
+                        print(f"Move failed for {selected_piece['piece']} to {end_pos}")
+                    
+                    dragging = False
+                    selected_piece = None
+        
+                    if is_in_check(game.board, 'w'):
+                        print("White king is in check!")
+                    if is_in_check(game.board, 'b'):
+                        print("Black king is in check!")
+        screen.fill(WHITE)
         draw_board(game, images)
         pygame.display.flip()
         timer.tick(fps)
 
     pygame.quit()
 
+
 if __name__ == "__main__":
     main()
-    
+

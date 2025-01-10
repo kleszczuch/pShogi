@@ -2,7 +2,7 @@ class SilverGeneral:
     def __init__(self, color):
         self.color = color
 
-    def move(self, current_pos):
+    def move(self, current_pos, board):
         row, col = current_pos
         moves = []
         if self.color == 'white':

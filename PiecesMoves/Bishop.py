@@ -53,6 +53,4 @@ class Bishop:
                     break
             else:
                 break
-
-        print(f"Bishop at ({row}, {col}) possible moves: {moves}")
         return moves
