@@ -92,6 +92,7 @@ def draw_scene(game, images):
     draw_matrices(game)
     draw_board(game, images) # do not work
     # TODO: Make it work
+    # Issue URL: https://github.com/kleszczuch/pShogi/issues/21
 
 def draw_piece(game, piece, row, col, square_size, images):
     if piece in images:
