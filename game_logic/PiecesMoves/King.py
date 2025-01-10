@@ -4,11 +4,14 @@ class King:
 
     def move(self, current_pos, board):
         row, col = current_pos
-        potential_moves = [
+        potential_moves = [      
             (row - 1, col), (row + 1, col), (row, col - 1), (row, col + 1),
             (row - 1, col - 1), (row - 1, col + 1), (row + 1, col - 1), (row + 1, col + 1)
         ]
-
-        # Filtruj ruchy w granicach planszy (9x9 dla shogi)
-       
-        return potential_moves
+        valid_moves = [
+            move for move in potential_moves
+            if 0 <= move[0] < 9 and 0 <= move[1] < 9
+        ]
+        return valid_moves
+        
+        

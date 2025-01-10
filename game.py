@@ -1,21 +1,14 @@
 import pygame
-
-from PiecesMoves.Pawn import Pawn
-from PiecesMoves.Knight import Knight
-from PiecesMoves.Lance import Lance
-from PiecesMoves.SilverGeneral import SilverGeneral
-from PiecesMoves.GoldGeneral import GoldGeneral
-from PiecesMoves.King import King
-from PiecesMoves.Rook import Rook
-from PiecesMoves.Bishop import Bishop
-
+from game_logic.moves import move_piece
+from game_logic.check import is_in_check
+from game_logic.moves import get_all_valid_moves
 WIDTH, HEIGHT = 900, 720
 screen = pygame.display.set_mode([WIDTH, HEIGHT])
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
-
 class GameState:
+
     
     def __init__(self):
         self.board = [
@@ -45,6 +38,7 @@ class GameState:
                         "pos": [row, col]
                     })
         return pieces
+
 def load_images():
     pieces = [
         "wLance", "wKnight", "wSilver", "wGold", "wKing", "wRook", "wBishop", "wPawn",
@@ -55,12 +49,14 @@ def load_images():
         images[piece] = pygame.image.load(f"images/{piece}.png")
     return images
 
-
-def draw_board(game, images):
+def draw_board(game, images, selected_piece=None):
     background_path = "images/background.png"
-    background = pygame.image.load(background_path) # load the background image
-   
+    background = pygame.image.load(background_path) 
+    to_move_path = "images/whereMove.png"
+    to_move = pygame.image.load(to_move_path)
+    possible_moves = []
     square_size = 80
+    to_move = pygame.transform.scale(to_move, (square_size, square_size)) 
     for row in range(9):
         for col in range(9):
             game.screen.blit(background, (col * square_size, row * square_size)) # adding background to every square
@@ -68,11 +64,15 @@ def draw_board(game, images):
                 game.screen,
                 (0, 0, 0),  
                 pygame.Rect(col * square_size, row * square_size, square_size, square_size), 2
-            )
-            # Rysuj pionki
+            )   
             piece = game.board[row][col]
             if piece != " ":
                 draw_piece(game, piece, row, col, square_size, images)
+            if selected_piece:
+                possible_moves = get_all_valid_moves(selected_piece, game.board)
+            for move in possible_moves:                    
+                    game.screen.blit(to_move, (move[0] * square_size, move[1] * square_size))
+    
 
 def draw_matrices(game):
     background_path = "images/backbackground.png"
@@ -86,133 +86,17 @@ def draw_matrices(game):
                 (0, 0, 0),  
                 pygame.Rect(col * square_size, row * square_size, square_size, square_size), 2
             )
-def draw_scene():
+
+def draw_scene(game, images):
     screen.fill(WHITE)
-    draw_matrices()
-    draw_board()
+    draw_matrices(game)
+    draw_board(game, images) # do not work
+    # TODO: Make it work
 
 def draw_piece(game, piece, row, col, square_size, images):
     if piece in images:
         piece_image = pygame.transform.scale(images[piece], (square_size, square_size))
-        game.screen.blit(piece_image, (col * square_size, row * square_size))  # draw a piece on the screen
-                
-def is_valid_move(game, color, target_pos):
-    target_piece = game.board[target_pos[0]][target_pos[1]]
-    if target_piece == " ":
-        return True
-    if color == 'white' and target_piece.startswith('w'):
-        return False
-    if color == 'black' and target_piece.startswith('b'):
-        return False
-    return True
-
-def get_all_valid_moves(piece_name, pos, board):
-    type, color = piece_name[1:], piece_name[0]
-    color = 'white' if color == 'w' else 'black'
-
-    piece_classes = {
-        "Pawn": Pawn,
-        "Knight": Knight,
-        "Lance": Lance,
-        "Silver": SilverGeneral,
-        "Gold": GoldGeneral,
-        "King": King,
-        "Rook": Rook,
-        "Bishop": Bishop
-    }
-
-    piece_class = piece_classes.get(type)
-    if not piece_class:
-        return []
-
-    piece = piece_class(color)
-    return piece.move(pos, board)
-
-def simulate_move(board, start_pos, end_pos):
-    """
-    Symuluje ruch figury na planszy.
-    board: lista reprezentująca planszę
-    start_pos: pozycja startowa figury
-    end_pos: pozycja docelowa figury
-    """
-    if 0 <= end_pos[0] < 9 and 0 <= end_pos[1] < 9:
-        piece = board[start_pos[0]][start_pos[1]]
-        board[start_pos[0]][start_pos[1]] = " "
-        board[end_pos[0]][end_pos[1]] = piece   
-
-def is_in_check(board, king_color):
-    king_pos = None
-    for row in range(9):
-        for col in range(9):
-            if board[row][col] == f"{king_color}King":
-                king_pos = (row, col)
-                break
-    if not king_pos:
-        raise ValueError("Nie znaleziono króla na planszy!")
-
-    enemy_color = "b" if king_color == "w" else "w"
-    print(f"Sprawdzanie szacha dla króla {king_color} na pozycji {king_pos}")
-    for row in range(9):
-        for col in range(9):
-            piece = board[row][col]
-            if piece.startswith(enemy_color):
-                possible_moves = get_all_valid_moves(piece, (row, col), board)
-                print(f"Figura {piece} na pozycji {(row, col)} może ruszyć na {possible_moves}")
-                if king_pos in possible_moves:
-                    return True
-    return False
-
-def is_checkmate(board, king_color):
-    """
-    Sprawdza, czy król jest w szach-macie.
-    """
-    if not is_in_check(board, king_color):
-        return False
-
-    for row in range(9):
-        for col in range(9):
-            piece = board[row][col]
-            if piece.startswith(king_color):
-                # Dla każdej figury sprawdź, czy ma legalne ruchy
-                valid_moves = get_all_valid_moves(piece, (row, col), board if piece.notendswith("King") else [])
-                for move in valid_moves:
-                    if 0 <= move[0] < 9 and 0 <= move[1] < 9:  # Sprawdź, czy ruch jest w granicach planszy
-                        temp_board = [row[:] for row in board]  # Skopiuj planszę
-                        simulate_move(temp_board, (row, col), move)
-                        if not is_in_check(temp_board, king_color):
-                            return False
-    return True    
-  
-def move_piece(game, selected_piece, end_pos):
-    piece_name = selected_piece["piece"]
-    start_pos = selected_piece["pos"]
-    color = 'white' if piece_name.startswith('w') else 'black'
-
-    piece_classes = {
-        "Pawn": Pawn,
-        "Knight": Knight,
-        "Lance": Lance,
-        "Silver": SilverGeneral,
-        "Gold": GoldGeneral,
-        "King": King,
-        "Rook": Rook,
-        "Bishop": Bishop,
-    }
-
-    piece_type = piece_name[1:]  # Get piece type, e.g., "Pawn", "Knight"
-    piece_class = piece_classes.get(piece_type)
- 
-    piece = piece_class(color)
-    possible_moves = piece.move(start_pos, game.board)
-    if end_pos in possible_moves:
-        # Perform the move
-        game.board[start_pos[0]][start_pos[1]] = " "
-        game.board[end_pos[0]][end_pos[1]] = piece_name
-        return True
-
-    print(f"Invalid move for {piece_name} to {end_pos}")
-    return False
-
+        game.screen.blit(piece_image, (col * square_size, row * square_size))  # draw a piece on the screen               
 
 def main():
     pygame.init()
@@ -221,16 +105,20 @@ def main():
     fps = 60
 
     game = GameState()
+    
     game.screen = screen
     images = load_images()
-
     dragging = False
     selected_piece = None
     square_size = 80
     turn = 'w'
-
+    
     running = True
+    firstTime = True
     while running:
+ 
+        pygame.display.flip()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -244,7 +132,9 @@ def main():
                         if piece["piece"][0] == turn:
                             dragging = True
                             selected_piece = piece
+                            draw_board(game, images, selected_piece)
                             print(f"Selected piece: {selected_piece}")
+                            pygame.display.flip()
                         break
 
             elif event.type == pygame.MOUSEBUTTONUP:
@@ -263,18 +153,18 @@ def main():
                     
                     dragging = False
                     selected_piece = None
-        
+
                     if is_in_check(game.board, 'w'):
                         print("White king is in check!")
                     if is_in_check(game.board, 'b'):
                         print("Black king is in check!")
+                    pygame.display.flip()
         screen.fill(WHITE)
-        draw_board(game, images)
-        pygame.display.flip()
+        draw_scene(game, images)
+        
         timer.tick(fps)
 
     pygame.quit()
-
 
 if __name__ == "__main__":
     main()
