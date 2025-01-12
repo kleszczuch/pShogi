@@ -10,3 +10,4 @@ class Pawn:
         elif self.color == 'black':
             move = (row + 1, col)  # Move one square forward for black
         return [move]
+        

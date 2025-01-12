@@ -31,8 +31,8 @@ def is_in_check(board, king_color):
                 possible_moves = get_all_valid_moves(selected_piece, board)  
                 #print(f"Figura {piece} na pozycji {(row, col)} może ruszyć na {possible_moves}")
                 if king_pos in possible_moves:
-                    return True
-    return False
+                    return True,king_pos
+    return False,king_pos
 
 
 def is_checkmate(board, king_color):

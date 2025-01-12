@@ -1,11 +1,21 @@
 import pygame
 from game_logic.moves import move_piece
 from game_logic.check import is_in_check
-from game_logic.moves import get_all_valid_moves
-WIDTH, HEIGHT = 900, 720
-screen = pygame.display.set_mode([WIDTH, HEIGHT])
+from game_logic.moves import get_type_of_piece_and_color
+from game_logic.moves import is_valid_move
+# it may be not needed but can not think what couses it/ game works well 
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module='pygame')
+
+WIDTH, HEIGHT = 1200, 720
+screen = pygame.display.set_mode([WIDTH, HEIGHT], pygame.SRCALPHA)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+GREEN = (0, 255, 0)
+GRAY = (128, 128, 128)
+RED = (255, 0, 0)
+TRANSCULCENT_RED = (255, 0, 0, 128)
+square_size = 80
 
 class GameState:
 
@@ -51,55 +61,109 @@ def load_images():
 
 def draw_board(game, images, selected_piece=None):
     background_path = "images/background.png"
-    background = pygame.image.load(background_path) 
-    to_move_path = "images/whereMove.png"
-    to_move = pygame.image.load(to_move_path)
+    background = pygame.image.load(background_path)
     possible_moves = []
-    square_size = 80
-    to_move = pygame.transform.scale(to_move, (square_size, square_size)) 
+    background = pygame.transform.scale(background, (square_size, square_size))
+    # Rysowanie głównej planszy (środkowej)
     for row in range(9):
         for col in range(9):
-            game.screen.blit(background, (col * square_size, row * square_size)) # adding background to every square
-            pygame.draw.rect( # painting boarder
+            x = (col + 3) * square_size  # Przesunięcie planszy o dwie kolumny w prawo
+            y = row * square_size
+            game.screen.blit(background, (x, y))
+            pygame.draw.rect(
                 game.screen,
-                (0, 0, 0),  
-                pygame.Rect(col * square_size, row * square_size, square_size, square_size), 2
-            )   
+                (0, 0, 0),
+                pygame.Rect(x, y, square_size, square_size), 2
+            )
             piece = game.board[row][col]
             if piece != " ":
-                draw_piece(game, piece, row, col, square_size, images)
-            if selected_piece:
-                possible_moves = get_all_valid_moves(selected_piece, game.board)
-            for move in possible_moves:                    
-                    game.screen.blit(to_move, (move[0] * square_size, move[1] * square_size))
+                draw_piece(game, piece, row, col + 3, square_size, images)
     
-
-def draw_matrices(game):
-    background_path = "images/backbackground.png"
-    background = pygame.image.load(background_path) # load the background image
-    square_size = 80
-    for row in range(9):
-        for col in range(2):
-            game.screen.blit(background, (col * square_size, row * square_size)) # adding background to every square
-            pygame.draw.rect( # painting boarder
+    # Pokazywanie możliwych ruchów dla wybranego pionka
+    if selected_piece:
+        piece_name = selected_piece["piece"]
+        start_pos = selected_piece["pos"]
+        piece_class, color = get_type_of_piece_and_color(selected_piece)
+        piece = piece_class(color)
+        possible_moves = piece.move(start_pos, game.board)
+        
+    for move in possible_moves:
+        if is_valid_move(game, color, move, selected_piece):
+            row, col = move
+            x = (col + 3) * square_size + square_size // 2
+            y = row * square_size + square_size // 2
+            pygame.draw.circle(
                 game.screen,
-                (0, 0, 0),  
-                pygame.Rect(col * square_size, row * square_size, square_size, square_size), 2
+                (0, 255, 0),
+                (x, y),
+                square_size // 6
             )
 
-def draw_scene(game, images):
-    screen.fill(WHITE)
-    draw_matrices(game)
-    draw_board(game, images) # do not work
-    # TODO: Make it work
-    # Issue URL: https://github.com/kleszczuch/pShogi/issues/21
+def draw_matrices(game, turn):
+    background_path = "images/backbackground.png"
+    background = pygame.image.load(background_path)
+    white_player_path = "images/wPlayer.jpg"
+    black_player_path = "images/bPlayer.jpg"
+    white_player = pygame.image.load(white_player_path)
+    black_player = pygame.image.load(black_player_path)
+    black_player = pygame.transform.scale(black_player, (square_size, square_size))
+    white_player = pygame.transform.scale(white_player, (square_size, square_size))
+    turn_path = "images/turn.jpg"
+    turnIMG = pygame.image.load(turn_path)
+    turnIMG = pygame.transform.scale(turnIMG, (square_size, square_size))
+    # Lewe kolumny
+    for row in range(9):
+        for col in range(3):
+            x = col * square_size
+            y = row * square_size
+            if (row == 0 and col == 0):
+                game.screen.blit(white_player, (x, y))
+            elif (row == 0 and col == 1 and turn == 'w'):
+                game.screen.blit(turnIMG, (x, y))
+            else:                
+                game.screen.blit(background, (x, y))
+            pygame.draw.rect(
+                game.screen,
+                (0, 0, 0),
+                pygame.Rect(x, y, square_size, square_size), 1
+            )
+    
+    # Prawe kolumny
+    for row in range(9):
+        for col in range(3):
+            x = (col +12) * square_size
+            y = row * square_size
+            if (row == 0 and col == 2):
+                game.screen.blit(black_player, (x, y))
+            elif (row == 0 and col == 1 and turn == 'b'):
+                game.screen.blit(turnIMG, (x, y))
+            else:         
+                game.screen.blit(background, (x, y))
+            pygame.draw.rect(
+                game.screen,
+                (0, 0, 0),
+                pygame.Rect(x, y, square_size, square_size), 1
+            )
+def draw_scene(game, images, turn):
+    screen.fill((255, 255, 255))  # Białe tło
+    draw_matrices(game, turn)  # Rysowanie bocznych kolumn
+    draw_board(game, images)  # Rysowanie głównej planszy
+
 
 def draw_piece(game, piece, row, col, square_size, images):
     if piece in images:
         piece_image = pygame.transform.scale(images[piece], (square_size, square_size))
-        game.screen.blit(piece_image, (col * square_size, row * square_size))  # draw a piece on the screen               
+        game.screen.blit(piece_image, (col * square_size, row * square_size))  # draw a piece on the screen           
+
+def highlight_tile(row, col,color):
+    col = col+3
+    col = col * square_size
+    row = row * square_size
+    pygame.draw.rect(screen, color, (col, row, square_size, square_size), 2)  # Grubsza krawędź dla podświetlenia
+
 
 def main():
+    
     pygame.init()
     pygame.display.set_caption('pShogi - Shogi-Dogi')
     timer = pygame.time.Clock()
@@ -113,23 +177,26 @@ def main():
     selected_piece = None
     square_size = 80
     turn = 'w'
-    
+    after_move = False
     running = True
     firstTime = True
+    ischeck = ""
     while running:
- 
-        pygame.display.flip()
-
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        if firstTime:
+            pygame.display.flip()
+          
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                mouse_x, mouse_y = event.pos
-                grid_x = mouse_y // square_size
-                grid_y = mouse_x // square_size
+                firstTime = False
+                
+                grid_x = mouse_y  // square_size
+                grid_y = mouse_x  // square_size - 3
                 for piece in game.get_piece_pos():
-                    if piece["pos"] == [grid_x, grid_y]:
+                    if piece["pos"] == [grid_x , grid_y]:
                         if piece["piece"][0] == turn:
                             dragging = True
                             selected_piece = piece
@@ -140,29 +207,39 @@ def main():
 
             elif event.type == pygame.MOUSEBUTTONUP:
                 if dragging and selected_piece:
-                    mouse_x, mouse_y = event.pos
                     grid_x = mouse_y // square_size
-                    grid_y = mouse_x // square_size
+                    grid_y = mouse_x // square_size - 3
                     end_pos = (grid_x, grid_y)
 
                     print(f"Attempting to move to {end_pos}")
                     if move_piece(game, selected_piece, end_pos):
                         turn = 'b' if turn == 'w' else 'w'
+                        
                         print(f"Moved {selected_piece['piece']} to {end_pos}")
                     else:
                         print(f"Move failed for {selected_piece['piece']} to {end_pos}")
                     
                     dragging = False
                     selected_piece = None
-
-                    if is_in_check(game.board, 'w'):
-                        print("White king is in check!")
-                    if is_in_check(game.board, 'b'):
-                        print("Black king is in check!")
-                    pygame.display.flip()
-        screen.fill(WHITE)
-        draw_scene(game, images)
-        
+                    wCheckKing, wking_pos = is_in_check(game.board, 'w')    
+                    bCheckKing, bking_pos = is_in_check(game.board, 'b')
+                    if wCheckKing: 
+                        ischeck = "White"
+                    elif bCheckKing:
+                        ischeck = "Black"   
+                    else:
+                        ischeck = ""
+                    after_move = True    
+                         
+        screen.fill((255, 255, 255, 0))
+        draw_scene(game, images, turn)
+        if ischeck == "White":
+            highlight_tile(wking_pos[0],wking_pos[1], TRANSCULCENT_RED) 
+        elif ischeck == "Black":
+            highlight_tile(bking_pos[0],bking_pos[1], TRANSCULCENT_RED)
+        if after_move: 
+            pygame.display.flip()
+            after_move = False
         timer.tick(fps)
 
     pygame.quit()
