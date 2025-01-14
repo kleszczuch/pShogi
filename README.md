@@ -4,4 +4,4 @@
 1. create virtual enviroment
 2. open virtual enviroment
 3. install requirements.txt
-4. run app via - python board.py
+4. run app via - python game.py
