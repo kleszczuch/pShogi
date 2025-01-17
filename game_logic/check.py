@@ -1,4 +1,5 @@
 
+import pygame
 from game_logic.moves import get_all_valid_moves
 from game_logic.PiecesMoves.Pawn import Pawn
 from game_logic.PiecesMoves.Knight import Knight
@@ -10,15 +11,21 @@ from game_logic.PiecesMoves.Rook import Rook
 from game_logic.PiecesMoves.Bishop import Bishop
 
 
-def is_in_check(board, king_color):
+def is_in_check(board, king_color, game):
     king_pos = None
+    isWin = False
     for row in range(9):
         for col in range(9):
             if board[row][col] == f"{king_color}King":
                 king_pos = (row, col)
                 break
     if not king_pos:
-       print ("ZWYCIESTWOOOO")
+        isWin = True
+        if king_color == "w":
+           winComunicate = (0,1)
+        else:
+            winComunicate = (14,1)
+        return False, winComunicate, isWin
 
     enemy_color = "b" if king_color == "w" else "w"
     print(f"Sprawdzanie szacha dla króla {king_color} na pozycji {king_pos}")
@@ -31,8 +38,16 @@ def is_in_check(board, king_color):
                 possible_moves = get_all_valid_moves(selected_piece, board)  
                 #print(f"Figura {piece} na pozycji {(row, col)} może ruszyć na {possible_moves}")
                 if king_pos in possible_moves:
-                    return True,king_pos
-    return False,king_pos
+                    return True,king_pos, isWin 
+    return False,king_pos, isWin
+
+def winner(game, king_color):
+    image_Path = "images\Zrzut ekranu 2025-01-15 121139.png"
+    image = pygame.image.load(image_Path)
+    if (king_color == "b"):
+        game.screen.blit(image, (0, 80))
+    if (king_color == "w"):    
+        game.screen.blit(image, (960, 80))
 
 
 def is_checkmate(board, king_color):

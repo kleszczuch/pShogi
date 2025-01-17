@@ -1,6 +1,6 @@
 import pygame
 from game_logic.moves import move_piece
-from game_logic.check import is_in_check
+from game_logic.check import is_in_check, winner
 from game_logic.moves import get_type_of_piece_and_color
 from game_logic.moves import is_valid_move
 # it may be not needed but can not think what couses it/ game works well 
@@ -181,6 +181,9 @@ def main():
     running = True
     firstTime = True
     ischeck = ""
+    isWwin = False
+    isWbin = False
+    isWin = False
     while running:
         mouse_x, mouse_y = pygame.mouse.get_pos()
         if firstTime:
@@ -188,48 +191,48 @@ def main():
           
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
-
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                firstTime = False
-                
-                grid_x = mouse_y  // square_size
-                grid_y = mouse_x  // square_size - 3
-                for piece in game.get_piece_pos():
-                    if piece["pos"] == [grid_x , grid_y]:
-                        if piece["piece"][0] == turn:
-                            dragging = True
-                            selected_piece = piece
-                            draw_board(game, images, selected_piece)
-                            print(f"Selected piece: {selected_piece}")
-                            pygame.display.flip()
-                        break
-
-            elif event.type == pygame.MOUSEBUTTONUP:
-                if dragging and selected_piece:
-                    grid_x = mouse_y // square_size
-                    grid_y = mouse_x // square_size - 3
-                    end_pos = (grid_x, grid_y)
-
-                    print(f"Attempting to move to {end_pos}")
-                    if move_piece(game, selected_piece, end_pos):
-                        turn = 'b' if turn == 'w' else 'w'
-                        
-                        print(f"Moved {selected_piece['piece']} to {end_pos}")
-                    else:
-                        print(f"Move failed for {selected_piece['piece']} to {end_pos}")
+                    running = False
+            if not isWin:    
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    firstTime = False
                     
-                    dragging = False
-                    selected_piece = None
-                    wCheckKing, wking_pos = is_in_check(game.board, 'w')    
-                    bCheckKing, bking_pos = is_in_check(game.board, 'b')
-                    if wCheckKing: 
-                        ischeck = "White"
-                    elif bCheckKing:
-                        ischeck = "Black"   
-                    else:
-                        ischeck = ""
-                    after_move = True    
+                    grid_x = mouse_y  // square_size
+                    grid_y = mouse_x  // square_size - 3
+                    for piece in game.get_piece_pos():
+                        if piece["pos"] == [grid_x , grid_y]:
+                            if piece["piece"][0] == turn:
+                                dragging = True
+                                selected_piece = piece
+                                draw_board(game, images, selected_piece)
+                                print(f"Selected piece: {selected_piece}")
+                                pygame.display.flip()
+                            break
+
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    if dragging and selected_piece:
+                        grid_x = mouse_y // square_size
+                        grid_y = mouse_x // square_size - 3
+                        end_pos = (grid_x, grid_y)
+
+                        print(f"Attempting to move to {end_pos}")
+                        if move_piece(game, selected_piece, end_pos):
+                            turn = 'b' if turn == 'w' else 'w'
+                            
+                            print(f"Moved {selected_piece['piece']} to {end_pos}")
+                        else:
+                            print(f"Move failed for {selected_piece['piece']} to {end_pos}")
+                        
+                        dragging = False
+                        selected_piece = None
+                        wCheckKing, wking_pos, isWwin= is_in_check(game.board, 'w', game)    
+                        bCheckKing, bking_pos, isWbin = is_in_check(game.board, 'b', game)
+                        if wCheckKing: 
+                            ischeck = "White"
+                        elif bCheckKing:
+                            ischeck = "Black"   
+                        else:
+                            ischeck = ""
+                        after_move = True    
                          
         screen.fill((255, 255, 255, 0))
         draw_scene(game, images, turn)
@@ -237,11 +240,18 @@ def main():
             highlight_tile(wking_pos[0],wking_pos[1], TRANSCULCENT_RED) 
         elif ischeck == "Black":
             highlight_tile(bking_pos[0],bking_pos[1], TRANSCULCENT_RED)
+        elif isWwin:
+            winner(game, "w")
+            pygame.display.flip()
+            isWin = True
+        elif isWbin:
+            winner(game, "b")
+            pygame.display.flip()
+            isWin = True
         if after_move: 
             pygame.display.flip()
             after_move = False
         timer.tick(fps)
-
     pygame.quit()
 
 if __name__ == "__main__":

@@ -40,7 +40,7 @@ def move_piece(game, selected_piece, end_pos):
         game.board[end_pos[0]][end_pos[1]] = selected_piece["piece"]
         return True
 
-    print(f"Invalid move for {selected_piece["piece"]} to {end_pos}")
+    #print(f"Invalid move for {selected_piece["piece"]} to {end_pos}")
     return False
 
 def get_all_valid_moves(selected_piece, board):
