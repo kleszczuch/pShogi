@@ -10,7 +10,6 @@ from game_logic.PiecesMoves.King import King
 from game_logic.PiecesMoves.Rook import Rook
 from game_logic.PiecesMoves.Bishop import Bishop
 
-
 def is_in_check(board, king_color, game):
     king_pos = None
     isWin = False
@@ -48,8 +47,7 @@ def winner(game, king_color):
         game.screen.blit(image, (0, 80))
     if (king_color == "w"):    
         game.screen.blit(image, (960, 80))
-
-
+    
 def is_checkmate(board, king_color):
     """
     Sprawdza, czy król jest w szach-macie.

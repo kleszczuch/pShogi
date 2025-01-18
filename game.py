@@ -1,8 +1,8 @@
 import pygame
-from game_logic.moves import move_piece
+from game_logic.moves import move_piece, get_type_of_piece_and_color, is_valid_move
 from game_logic.check import is_in_check, winner
-from game_logic.moves import get_type_of_piece_and_color
-from game_logic.moves import is_valid_move
+from game_logic.caputuring_and_reviving import get_captured_by_black, get_captured_by_white
+
 # it may be not needed but can not think what couses it/ game works well 
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module='pygame')
@@ -19,6 +19,8 @@ square_size = 80
 
 class GameState:
 
+# NPY - Not Promoted Yet
+# P - Promoted
     
     def __init__(self):
         self.board = [
@@ -63,6 +65,7 @@ def draw_board(game, images, selected_piece=None):
     background_path = "images/background.png"
     background = pygame.image.load(background_path)
     possible_moves = []
+    
     background = pygame.transform.scale(background, (square_size, square_size))
     # Rysowanie głównej planszy (środkowej)
     for row in range(9):
@@ -88,7 +91,8 @@ def draw_board(game, images, selected_piece=None):
         possible_moves = piece.move(start_pos, game.board)
         
     for move in possible_moves:
-        if is_valid_move(game, color, move, selected_piece):
+        is_valid, target_piece = is_valid_move(game, color, move, selected_piece)
+        if is_valid:
             row, col = move
             x = (col + 3) * square_size + square_size // 2
             y = row * square_size + square_size // 2
@@ -111,6 +115,8 @@ def draw_matrices(game, turn):
     turn_path = "images/turn.jpg"
     turnIMG = pygame.image.load(turn_path)
     turnIMG = pygame.transform.scale(turnIMG, (square_size, square_size))
+    images = load_images()
+    
     # Lewe kolumny
     for row in range(9):
         for col in range(3):
@@ -127,7 +133,13 @@ def draw_matrices(game, turn):
                 (0, 0, 0),
                 pygame.Rect(x, y, square_size, square_size), 1
             )
-    
+    # Pionki na lewej kolumnie
+    white_capture = get_captured_by_white()
+    for pos, piece in white_capture.items():
+        if piece["piece"] is not None:
+            draw_piece(game, piece["piece"], piece["pos"][1], piece["pos"][0], square_size, images)         
+            
+
     # Prawe kolumny
     for row in range(9):
         for col in range(3):
@@ -144,6 +156,12 @@ def draw_matrices(game, turn):
                 (0, 0, 0),
                 pygame.Rect(x, y, square_size, square_size), 1
             )
+
+    black_capture = get_captured_by_black()
+    for pos, piece in black_capture.items():
+        if piece["piece"] is not None:
+            draw_piece(game, piece["piece"], piece["pos"][1], piece["pos"][0], square_size, images)        
+            
 def draw_scene(game, images, turn):
     screen.fill((255, 255, 255))  # Białe tło
     draw_matrices(game, turn)  # Rysowanie bocznych kolumn
@@ -240,11 +258,11 @@ def main():
             highlight_tile(wking_pos[0],wking_pos[1], TRANSCULCENT_RED) 
         elif ischeck == "Black":
             highlight_tile(bking_pos[0],bking_pos[1], TRANSCULCENT_RED)
-        elif isWwin:
+        elif isWwin and isWin == False:
             winner(game, "w")
             pygame.display.flip()
             isWin = True
-        elif isWbin:
+        elif isWbin and isWin == False:
             winner(game, "b")
             pygame.display.flip()
             isWin = True

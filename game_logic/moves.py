@@ -6,8 +6,9 @@ from game_logic.PiecesMoves.GoldGeneral import GoldGeneral
 from game_logic.PiecesMoves.King import King
 from game_logic.PiecesMoves.Rook import Rook
 from game_logic.PiecesMoves.Bishop import Bishop
+from game_logic.caputuring_and_reviving import capture_piece
 
-import pygame
+
 def get_type_of_piece_and_color(piece):
 
     piece_name = piece["piece"]
@@ -34,14 +35,14 @@ def move_piece(game, selected_piece, end_pos):
 
     piece = piece_class(color)
     possible_moves = piece.move(start_pos, game.board)
-    if end_pos in possible_moves and is_valid_move(game, color, end_pos, selected_piece):
+    can_move, target_piece = is_valid_move(game, color, end_pos, selected_piece)
+    if end_pos in possible_moves and can_move:
         # Perform the move
         game.board[start_pos[0]][start_pos[1]] = " "
         game.board[end_pos[0]][end_pos[1]] = selected_piece["piece"]
+        if target_piece is not None:
+            capture_piece(target_piece)
         return True
-
-    #print(f"Invalid move for {selected_piece["piece"]} to {end_pos}")
-    return False
 
 def get_all_valid_moves(selected_piece, board):
     piece_class, color = get_type_of_piece_and_color(selected_piece)  
@@ -57,7 +58,7 @@ def is_valid_move(game, color, target_pos, selected_piece):
     if target_pos in possible_moves:
         target_piece = game.board[target_pos[0]][target_pos[1]]
         if target_piece == " ":
-            return True
+            return True, None
         if (color == 'white' and target_piece.startswith('b')) or (color == 'black' and target_piece.startswith('w')):
-            return True
-    return False
+            return True, target_piece
+    return False, None
