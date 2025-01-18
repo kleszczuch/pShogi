@@ -1,5 +1,5 @@
 import pygame
-from game_logic.moves import move_piece, get_type_of_piece_and_color, is_valid_move
+from game_logic.moves import move_piece, get_type_color_and_promotion, is_valid_move
 from game_logic.check import is_in_check, winner
 from game_logic.caputuring_and_reviving import get_captured_by_black, get_captured_by_white
 
@@ -24,15 +24,15 @@ class GameState:
     
     def __init__(self):
         self.board = [
-            ["bLance", "bKnight", "bSilver", "bGold", "bKing", "bGold", "bSilver", "bKnight", "bLance"],
-            [" ", "bRook", " ", " ", " ", " ", " ", "bBishop", " "],
-            ["bPawn", "bPawn", "bPawn", "bPawn", "bPawn", "bPawn", "bPawn", "bPawn", "bPawn"],
-            [" ", " ", " ", " ", " ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " ", " ", " ", " ", " "],
-            ["wPawn", "wPawn", "wPawn", "wPawn", "wPawn", "wPawn", "wPawn", "wPawn", "wPawn"],
-            [" ", "wBishop", " ", " ", " ", " ", " ", "wRook", " "],
-            ["wLance", "wKnight", "wSilver", "wGold", "wKing", "wGold", "wSilver", "wKnight", "wLance"]
+              ["bLance_NPY", "bKnight_NPY", "bSilver_NPY", "bGold", "bKing", "bGold", "bSilver_NPY", "bKnight_NPY", "bLance_NPY"],
+    [" ", "bRook_NPY", " ", " ", " ", " ", " ", "bBishop_NPY", " "],
+    ["bPawn_NPY", "bPawn_NPY", "bPawn_NPY", "bPawn_NPY", "bPawn_NPY", "bPawn_NPY", "bPawn_NPY", "bPawn_NPY", "bPawn_NPY"],
+    [" ", " ", " ", " ", " ", " ", " ", " ", " "],
+    [" ", " ", " ", " ", " ", " ", " ", " ", " "],
+    [" ", " ", " ", " ", " ", " ", " ", " ", " "],
+    ["wPawn_NPY", "wPawn_NPY", "wPawn_NPY", "wPawn_NPY", "wPawn_NPY", "wPawn_NPY", "wPawn_NPY", "wPawn_NPY", "wPawn_NPY"],
+    [" ", "wBishop_NPY", " ", " ", " ", " ", " ", "wRook_NPY", " "],
+    ["wLance_NPY", "wKnight_NPY", "wSilver_NPY", "wGold", "wKing", "wGold", "wSilver_NPY", "wKnight_NPY", "wLance_NPY"]
         ]
 
     def get_current_game_state(self):
@@ -53,9 +53,12 @@ class GameState:
 
 def load_images():
     pieces = [
-        "wLance", "wKnight", "wSilver", "wGold", "wKing", "wRook", "wBishop", "wPawn",
-        "bLance", "bKnight", "bSilver", "bGold", "bKing", "bRook", "bBishop", "bPawn"
-    ]
+    "wLance_NPY", "wKnight_NPY", "wSilver_NPY", "wGold", "wKing", "wRook_NPY", "wBishop_NPY", "wPawn_NPY",
+    "bLance_NPY", "bKnight_NPY", "bSilver_NPY", "bGold", "bKing", "bRook_NPY", "bBishop_NPY", "bPawn_NPY",
+    "wLance_P", "wKnight_P", "wSilver_P", "wRook_P", "wBishop_P", "wPawn_P",
+    "bLance_P", "bKnight_P", "bSilver_P", "bRook_P", "bBishop_P", "bPawn_P"
+]
+    
     images = {}  # dictionary of images to be able to use them in the draw board function
     for piece in pieces:
         images[piece] = pygame.image.load(f"images/{piece}.png")
@@ -86,10 +89,10 @@ def draw_board(game, images, selected_piece=None):
     if selected_piece:
         piece_name = selected_piece["piece"]
         start_pos = selected_piece["pos"]
-        piece_class, color = get_type_of_piece_and_color(selected_piece)
+        piece_class, color, promotion = get_type_color_and_promotion(selected_piece)
         piece = piece_class(color)
-        possible_moves = piece.move(start_pos, game.board)
-        
+        print(f"Selected piece ehreeeeeeeeeeeeeeeee: {piece_name}")
+        possible_moves = piece.move(start_pos, game.board, promotion)
     for move in possible_moves:
         is_valid, target_piece = is_valid_move(game, color, move, selected_piece)
         if is_valid:
