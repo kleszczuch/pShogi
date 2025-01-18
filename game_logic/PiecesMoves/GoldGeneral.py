@@ -2,7 +2,7 @@ class GoldGeneral:
     def __init__(self, color):
         self.color = color
 
-    def move(self, current_pos, board):
+    def move(self, current_pos, board, promotion):
         row, col = current_pos
         moves = []
         if self.color == 'white':

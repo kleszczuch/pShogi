@@ -1,10 +1,14 @@
+from game_logic.PiecesMoves.King import King
+promoted_moves = King(color = 'white')
 class Rook:
     def __init__(self, color):
         self.color = color
 
-    def move(self, current_pos, board):
+    def move(self, current_pos, board,promotion):
         row, col = current_pos
         moves = []
+        if promotion:
+            moves = (promoted_moves.move(current_pos, board, promotion))
         # Check vertical moves
         for r in range(row - 1, -1, -1):
             if board[r][col] == " ":
@@ -39,4 +43,5 @@ class Rook:
             else:
                 moves.append((row, c))
                 break
+        
         return moves
