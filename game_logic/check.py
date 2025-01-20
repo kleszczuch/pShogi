@@ -41,15 +41,6 @@ def is_in_check(board, king_color, game):
                     return True,king_pos, isWin 
     return False,king_pos, isWin
 
-def winner(game, king_color):
-    image_Path = "images\Zrzut ekranu 2025-01-15 121139.png"
-    image = pygame.image.load(image_Path)
-    if (king_color == "b"):
-        game.screen.blit(image, (0, 80))
-    if (king_color == "w"):    
-        game.screen.blit(image, (960, 80))
-
-
 def is_checkmate(board, king_color):
     """
     Sprawdza, czy król jest w szach-macie.

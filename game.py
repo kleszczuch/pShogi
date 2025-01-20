@@ -1,6 +1,7 @@
+import sys
 import pygame
 from game_logic.moves import move_piece
-from game_logic.check import is_in_check, winner
+from game_logic.check import is_in_check
 from game_logic.moves import get_type_of_piece_and_color
 from game_logic.moves import is_valid_move
 # it may be not needed but can not think what couses it/ game works well 
@@ -22,13 +23,13 @@ class GameState:
     
     def __init__(self):
         self.board = [
-            ["bLance", "bKnight", "bSilver", "bGold", "bKing", "bGold", "bSilver", "bKnight", "bLance"],
+            ["bLance", "bKnight", "bSilver", "bGold", "", "bGold", "bSilver", "bKnight", "bLance"],
             [" ", "bRook", " ", " ", " ", " ", " ", "bBishop", " "],
             ["bPawn", "bPawn", "bPawn", "bPawn", "bPawn", "bPawn", "bPawn", "bPawn", "bPawn"],
             [" ", " ", " ", " ", " ", " ", " ", " ", " "],
             [" ", " ", " ", " ", " ", " ", " ", " ", " "],
             [" ", " ", " ", " ", " ", " ", " ", " ", " "],
-            ["wPawn", "wPawn", "wPawn", "wPawn", "wPawn", "wPawn", "wPawn", "wPawn", "wPawn"],
+            ["wPawn", "wPawn", "bKing", "wPawn", "wPawn", "wPawn", "wPawn", "wPawn", "wPawn"],
             [" ", "wBishop", " ", " ", " ", " ", " ", "wRook", " "],
             ["wLance", "wKnight", "wSilver", "wGold", "wKing", "wGold", "wSilver", "wKnight", "wLance"]
         ]
@@ -161,6 +162,68 @@ def highlight_tile(row, col,color):
     row = row * square_size
     pygame.draw.rect(screen, color, (col, row, square_size, square_size), 2)  # Grubsza krawędź dla podświetlenia
 
+import tkinter as tk
+from PIL import Image, ImageTk, ImageSequence
+import sys
+def show_victory_message(message):
+    def on_exit():
+        root.destroy()
+        sys.exit()
+
+    def on_play_again():
+        root.destroy()
+        main()  # Zakładam, że masz funkcję main() do ponownego uruchomienia gry
+
+    root = tk.Tk()
+    root.title("Victory!")
+    root.resizable(False, False)
+    root.configure(bg='white')  # Ustawienie koloru tła
+    
+    # Uzyskanie rozmiaru ekranu
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    # Ustawienie rozmiaru okienka
+    window_width = 500
+    window_height = 575
+
+    # Obliczenie pozycji okienka, aby było wyśrodkowane
+    position_right = int(screen_width/2 - window_width/2)
+    position_down = int(screen_height/2 - window_height/2)
+
+    # Ustawienie geometrii okienka
+    root.geometry(f"{window_width}x{window_height}+{position_right}+{position_down}")
+
+    label = tk.Label(root, text=message)
+    label.pack(pady=10)
+
+    # Dodanie GIF-a
+    gif_label = tk.Label(root)
+    gif_label.pack()
+
+    gif_path = "images\da03caf3-3da7-4f33-b49f-15bc9248d3ed.gif"  # Zmień na ścieżkę do Twojego GIF-a
+    gif = Image.open(gif_path)
+    frames = [ImageTk.PhotoImage(frame) for frame in ImageSequence.Iterator(gif)]
+
+    def update_frame(index):
+        frame = frames[index]
+        gif_label.configure(image=frame)
+        root.after(100, update_frame, (index + 1) % len(frames))
+
+    root.after(0, update_frame, 0)
+
+    button_exit = tk.Button(root, text="Exit", command=on_exit)
+    button_exit.pack(side=tk.LEFT, padx=20)
+
+    button_play_again = tk.Button(root, text="Play Again", command=on_play_again)
+    button_play_again.pack(side=tk.RIGHT, padx=20)
+
+     # Przypisanie funkcji on_exit do zdarzenia zamknięcia okna
+    root.protocol("WM_DELETE_WINDOW", on_exit)
+
+    root.mainloop()
+    
+
 
 def main():
     
@@ -241,13 +304,13 @@ def main():
         elif ischeck == "Black":
             highlight_tile(bking_pos[0],bking_pos[1], TRANSCULCENT_RED)
         elif isWwin:
-            winner(game, "w")
             pygame.display.flip()
             isWin = True
+            show_victory_message("Black won!")
         elif isWbin:
-            winner(game, "b")
             pygame.display.flip()
             isWin = True
+            show_victory_message("White won!")
         if after_move: 
             pygame.display.flip()
             after_move = False
