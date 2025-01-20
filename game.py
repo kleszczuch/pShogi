@@ -2,7 +2,7 @@ import pygame
 from game_logic.moves import move_piece, get_type_color_and_promotion, is_valid_move
 from game_logic.check import is_in_check, winner
 from game_logic.caputuring_and_reviving import get_captured_by_black, get_captured_by_white
-
+from game_logic.victory import show_victory_message
 # it may be not needed but can not think what couses it/ game works well 
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module='pygame')
@@ -34,11 +34,14 @@ class GameState:
     [" ", "wBishop_NPY", " ", " ", " ", " ", " ", "wRook_NPY", " "],
     ["wLance_NPY", "wKnight_NPY", "wSilver_NPY", "wGold", "wKing", "wGold", "wSilver_NPY", "wKnight_NPY", "wLance_NPY"]
         ]
+        self.captured_by_white = [[" "  for _ in range(3)] for _ in range(9)]
+        self.captured_by_black = [[" "  for _ in range(3)] for _ in range(9)]
+
 
     def get_current_game_state(self):
         return self.board # to be able to refresh the game state
 
-    def get_piece_pos(self):
+    def get_piece_pos_board(self):
         pieces = []
         # Loop through the board and get the position of each piece and add them to the pieces list - this is needed to be able to move them around
         for row in range(9):
@@ -49,6 +52,27 @@ class GameState:
                         "piece": piece,
                         "pos": [row, col]
                     })
+        return pieces
+    def get_piece_pos_capture(self):
+        pieces = []
+        # Loop through the board and get the position of each piece and add them to the pieces list - this is needed to be able to move them around
+        for row in range(9):
+            for col in range(3):
+                piece = self.captured_by_white[row][col]
+                if piece != " ":
+                    pieces.append({
+                        "piece": piece,
+                        "pos": [row, col]
+                    })
+        for row in range(9):
+            for col in range(3):
+                piece = self.captured_by_black[row][col]
+                if piece != " ":
+                    pieces.append({
+                        "piece": piece,
+                        "pos": [row, col]
+                    })
+                    
         return pieces
 
 def load_images():
@@ -218,13 +242,26 @@ def main():
                     firstTime = False
                     
                     grid_x = mouse_y  // square_size
-                    grid_y = mouse_x  // square_size - 3
-                    for piece in game.get_piece_pos():
-                        if piece["pos"] == [grid_x , grid_y]:
+                    grid_y = mouse_x  // square_size 
+                    print (f"grid_x: {grid_x}, grid_y: {grid_y}")
+                    for piece in game.get_piece_pos_board():
+                        if piece["pos"] == [grid_x , grid_y -3]:
                             if piece["piece"][0] == turn:
                                 dragging = True
                                 selected_piece = piece
                                 draw_board(game, images, selected_piece)
+                                print(f"Selected piece: {selected_piece}")
+                                pygame.display.flip()
+                            break
+                    for piece in game.get_piece_pos_capture():
+                        print(f"Selected piece: ajfoanefjklanefjqadiosfoadjnmol")
+                        if piece["pos"] == [grid_x , grid_y]:
+                            print(f"Selected piece: {piece}")
+                            print(f"Selected piece: {grid_x, grid_y}")
+                            if piece["piece"][0] == turn:
+                                dragging = True
+                                selected_piece = piece
+                                draw_scene(game, images, selected_piece)
                                 print(f"Selected piece: {selected_piece}")
                                 pygame.display.flip()
                             break
@@ -261,14 +298,14 @@ def main():
             highlight_tile(wking_pos[0],wking_pos[1], TRANSCULCENT_RED) 
         elif ischeck == "Black":
             highlight_tile(bking_pos[0],bking_pos[1], TRANSCULCENT_RED)
-        elif isWwin and isWin == False:
-            winner(game, "w")
+        elif isWwin:
             pygame.display.flip()
             isWin = True
-        elif isWbin and isWin == False:
-            winner(game, "b")
+            show_victory_message("White won", main)
+        elif isWbin:
             pygame.display.flip()
             isWin = True
+            show_victory_message("Black won", main)
         if after_move: 
             pygame.display.flip()
             after_move = False

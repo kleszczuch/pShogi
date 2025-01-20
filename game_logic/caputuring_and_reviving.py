@@ -42,7 +42,6 @@ def capture_piece(piece):
             print(f"Pos: {value['pos']}, Piece: {value['piece']}")  
 
 
-
 def get_captured_by_white():
         return captured_by_white
 
