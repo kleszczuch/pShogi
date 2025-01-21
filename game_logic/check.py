@@ -40,6 +40,7 @@ def is_in_check(board, king_color, game):
     return False,king_pos, isWin
 
 def is_checkmate(board, king_color): # TODO: implement this function
+                                     # Issue URL: https://github.com/kleszczuch/pShogi/issues/25
     if not is_in_check(board, king_color):
         return False
 
