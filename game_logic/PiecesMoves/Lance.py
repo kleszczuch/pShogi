@@ -10,7 +10,7 @@ class Lance:
         if self.color == 'white':
             general = GoldGeneral(color = 'white')
             if promotion:
-                return general.move(current_pos, board, promotion)
+                return general.move(current_pos, board, promotion) # Promoted pieces can move like a GoldGeneral
             else:
                 for r in range(row - 1, -1, -1):
                     if board[r][col] == " ":

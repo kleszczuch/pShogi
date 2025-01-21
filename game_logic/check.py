@@ -35,23 +35,11 @@ def is_in_check(board, king_color, game):
             if piece.startswith(enemy_color):
                 selected_piece = {"piece": piece, "pos": (row, col)} 
                 possible_moves = get_all_valid_moves(selected_piece, board)  
-                #print(f"Figura {piece} na pozycji {(row, col)} może ruszyć na {possible_moves}")
                 if king_pos in possible_moves:
                     return True,king_pos, isWin 
     return False,king_pos, isWin
 
-def winner(game, king_color):
-    image_Path = "images\Zrzut ekranu 2025-01-15 121139.png"
-    image = pygame.image.load(image_Path)
-    if (king_color == "b"):
-        game.screen.blit(image, (0, 80))
-    if (king_color == "w"):    
-        game.screen.blit(image, (960, 80))
-    
-def is_checkmate(board, king_color):
-    """
-    Sprawdza, czy król jest w szach-macie.
-    """
+def is_checkmate(board, king_color): # TODO: implement this function
     if not is_in_check(board, king_color):
         return False
 
@@ -59,23 +47,16 @@ def is_checkmate(board, king_color):
         for col in range(9):
             piece = board[row][col]
             if piece.startswith(king_color):
-                # Dla każdej figury sprawdź, czy ma legalne ruchy
                 valid_moves = get_all_valid_moves(piece, (row, col), board if piece.notendswith("King") else [])
                 for move in valid_moves:
-                    if 0 <= move[0] < 9 and 0 <= move[1] < 9:  # Sprawdź, czy ruch jest w granicach planszy
-                        temp_board = [row[:] for row in board]  # Skopiuj planszę
+                    if 0 <= move[0] < 9 and 0 <= move[1] < 9:  
+                        temp_board = [row[:] for row in board] 
                         simulate_move(temp_board, (row, col), move)
                         if not is_in_check(temp_board, king_color):
                             return False
     return True    
 
 def simulate_move(board, start_pos, end_pos):
-    """
-    Symuluje ruch figury na planszy.
-    board: lista reprezentująca planszę
-    start_pos: pozycja startowa figury
-    end_pos: pozycja docelowa figury
-    """
     if 0 <= end_pos[0] < 9 and 0 <= end_pos[1] < 9:
         piece = board[start_pos[0]][start_pos[1]]
         board[start_pos[0]][start_pos[1]] = " "

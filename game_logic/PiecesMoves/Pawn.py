@@ -10,15 +10,14 @@ class Pawn:
         
         # Jeśli pionek jest promowany
         if promotion:
-            promoted_moves = GoldGeneral(color=self.color)  # Tworzymy instancję GoldGeneral
-            moves.extend(promoted_moves.move(current_pos, board, promotion))  # Dodajemy ruchy z GoldGeneral
+            promoted_moves = GoldGeneral(color=self.color) 
+            moves.extend(promoted_moves.move(current_pos, board, promotion))
         else:
-            # Jeśli pionek nie jest promowany, normalnie przesuwa się o 1 pole
             if self.color == 'white':
-                move = (row - 1, col)  # Ruch białego pionka
+                move = (row - 1, col) 
                 moves.append(move)
             elif self.color == 'black':
-                move = (row + 1, col)  # Ruch czarnego pionka
+                move = (row + 1, col)
                 moves.append(move)
 
         return moves

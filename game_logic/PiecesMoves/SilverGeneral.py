@@ -8,7 +8,7 @@ class SilverGeneral:
         row, col = current_pos
         moves = []
         if self.color == 'white':
-            promoted_moves = GoldGeneral(color='white')
+            promoted_moves = GoldGeneral(color='white') # Promoted pieces can move like a GoldGeneral
             if promotion:
                 moves = promoted_moves.move(current_pos, board, promotion)
             else:

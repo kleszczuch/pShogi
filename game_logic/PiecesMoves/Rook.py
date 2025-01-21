@@ -8,7 +8,7 @@ class Rook:
         row, col = current_pos
         moves = []
         if promotion:
-            moves = (promoted_moves.move(current_pos, board, promotion))
+            moves = (promoted_moves.move(current_pos, board, promotion)) # Promoted rook moves appends with king moves
         # Check vertical moves
         for r in range(row - 1, -1, -1):
             if board[r][col] == " ":

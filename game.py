@@ -1,11 +1,8 @@
 import pygame
 from game_logic.moves import move_piece, get_type_color_and_promotion, is_valid_move
-from game_logic.check import is_in_check, winner
+from game_logic.check import is_in_check
 from game_logic.caputuring_and_reviving import get_captured_by_black, get_captured_by_white
 from game_logic.victory import show_victory_message
-# it may be not needed but can not think what couses it/ game works well 
-import warnings
-warnings.filterwarnings("ignore", category=UserWarning, module='pygame')
 
 WIDTH, HEIGHT = 1200, 720
 screen = pygame.display.set_mode([WIDTH, HEIGHT], pygame.SRCALPHA)
@@ -25,14 +22,14 @@ class GameState:
     def __init__(self):
         self.board = [
               ["bLance_NPY", "bKnight_NPY", "bSilver_NPY", "bGold", "bKing", "bGold", "bSilver_NPY", "bKnight_NPY", "bLance_NPY"],
-    [" ", "bRook_NPY", " ", " ", " ", " ", " ", "bBishop_NPY", " "],
-    ["bPawn_NPY", "bPawn_NPY", "bPawn_NPY", "bPawn_NPY", "bPawn_NPY", "bPawn_NPY", "bPawn_NPY", "bPawn_NPY", "bPawn_NPY"],
-    [" ", " ", " ", " ", " ", " ", " ", " ", " "],
-    [" ", " ", " ", " ", " ", " ", " ", " ", " "],
-    [" ", " ", " ", " ", " ", " ", " ", " ", " "],
-    ["wPawn_NPY", "wPawn_NPY", "wPawn_NPY", "wPawn_NPY", "wPawn_NPY", "wPawn_NPY", "wPawn_NPY", "wPawn_NPY", "wPawn_NPY"],
-    [" ", "wBishop_NPY", " ", " ", " ", " ", " ", "wRook_NPY", " "],
-    ["wLance_NPY", "wKnight_NPY", "wSilver_NPY", "wGold", "wKing", "wGold", "wSilver_NPY", "wKnight_NPY", "wLance_NPY"]
+        [" ", "bRook_NPY", " ", " ", " ", " ", " ", "bBishop_NPY", " "],
+        ["bPawn_NPY", "bPawn_NPY", "bPawn_NPY", "bPawn_NPY", "bPawn_NPY", "bPawn_NPY", "bPawn_NPY", "bPawn_NPY", "bPawn_NPY"],
+        [" ", " ", " ", " ", " ", " ", " ", " ", " "],
+        [" ", " ", " ", " ", " ", " ", " ", " ", " "],
+        [" ", " ", " ", " ", " ", " ", " ", " ", " "],
+        ["wPawn_NPY", "wPawn_NPY", "wPawn_NPY", "wPawn_NPY", "wPawn_NPY", "wPawn_NPY", "wPawn_NPY", "wPawn_NPY", "wPawn_NPY"],
+        [" ", "wBishop_NPY", " ", " ", " ", " ", " ", "wRook_NPY", " "],
+        ["wLance_NPY", "wKnight_NPY", "wSilver_NPY", "wGold", "wKing", "wGold", "wSilver_NPY", "wKnight_NPY", "wLance_NPY"]
         ]
         self.captured_by_white = [[" "  for _ in range(3)] for _ in range(9)]
         self.captured_by_black = [[" "  for _ in range(3)] for _ in range(9)]
@@ -43,7 +40,6 @@ class GameState:
 
     def get_piece_pos_board(self):
         pieces = []
-        # Loop through the board and get the position of each piece and add them to the pieces list - this is needed to be able to move them around
         for row in range(9):
             for col in range(9):
                 piece = self.board[row][col]
@@ -55,7 +51,6 @@ class GameState:
         return pieces
     def get_piece_pos_capture(self):
         pieces = []
-        # Loop through the board and get the position of each piece and add them to the pieces list - this is needed to be able to move them around
         for row in range(9):
             for col in range(3):
                 piece = self.captured_by_white[row][col]
@@ -88,16 +83,15 @@ def load_images():
         images[piece] = pygame.image.load(f"images/{piece}.png")
     return images
 
-def draw_board(game, images, selected_piece=None):
+def draw_board(game, images, selected_piece=None, reviving=False):
     background_path = "images/background.png"
     background = pygame.image.load(background_path)
     possible_moves = []
-    
+    # Main board
     background = pygame.transform.scale(background, (square_size, square_size))
-    # Rysowanie głównej planszy (środkowej)
     for row in range(9):
         for col in range(9):
-            x = (col + 3) * square_size  # Przesunięcie planszy o dwie kolumny w prawo
+            x = (col + 3) * square_size  # moving board to the right 3 squares to make space for captured pieces
             y = row * square_size
             game.screen.blit(background, (x, y))
             pygame.draw.rect(
@@ -109,26 +103,38 @@ def draw_board(game, images, selected_piece=None):
             if piece != " ":
                 draw_piece(game, piece, row, col + 3, square_size, images)
     
-    # Pokazywanie możliwych ruchów dla wybranego pionka
-    if selected_piece:
+    # if selected_piece is not None, draw possible moves
+    if selected_piece and reviving == False:
         piece_name = selected_piece["piece"]
         start_pos = selected_piece["pos"]
         piece_class, color, promotion = get_type_color_and_promotion(selected_piece)
         piece = piece_class(color)
-        print(f"Selected piece ehreeeeeeeeeeeeeeeee: {piece_name}")
         possible_moves = piece.move(start_pos, game.board, promotion)
-    for move in possible_moves:
-        is_valid, target_piece = is_valid_move(game, color, move, selected_piece)
-        if is_valid:
-            row, col = move
-            x = (col + 3) * square_size + square_size // 2
-            y = row * square_size + square_size // 2
-            pygame.draw.circle(
-                game.screen,
-                (0, 255, 0),
-                (x, y),
-                square_size // 6
-            )
+    if reviving:
+        for row_idx in range(len(game.board)):
+            for col_idx in range(len(game.board[row_idx])):
+                if game.board[row_idx][col_idx] == " ":
+                    x = (col_idx + 3) * square_size + square_size // 2
+                    y = row_idx * square_size + square_size // 2
+                    pygame.draw.circle(
+                        game.screen,
+                        (0, 255, 0),
+                        (x, y),
+                        square_size // 6
+                    )
+    else:
+        for move in possible_moves:
+            is_valid, target_piece = is_valid_move(game, color, move, selected_piece)
+            if is_valid:
+                row, col = move
+                x = (col + 3) * square_size + square_size // 2
+                y = row * square_size + square_size // 2
+                pygame.draw.circle(
+                    game.screen,
+                    (0, 255, 0),
+                    (x, y),
+                    square_size // 6
+                )
 
 def draw_matrices(game, turn):
     background_path = "images/backbackground.png"
@@ -144,7 +150,7 @@ def draw_matrices(game, turn):
     turnIMG = pygame.transform.scale(turnIMG, (square_size, square_size))
     images = load_images()
     
-    # Lewe kolumny
+    # Left columns
     for row in range(9):
         for col in range(3):
             x = col * square_size
@@ -160,14 +166,14 @@ def draw_matrices(game, turn):
                 (0, 0, 0),
                 pygame.Rect(x, y, square_size, square_size), 1
             )
-    # Pionki na lewej kolumnie
+    # Pieces captured by white
     white_capture = get_captured_by_white()
     for pos, piece in white_capture.items():
         if piece["piece"] is not None:
-            draw_piece(game, piece["piece"], piece["pos"][1], piece["pos"][0], square_size, images)         
+            draw_piece(game, piece["piece"], piece["pos"][0], piece["pos"][1], square_size, images)         
             
 
-    # Prawe kolumny
+    # Right columns
     for row in range(9):
         for col in range(3):
             x = (col +12) * square_size
@@ -183,16 +189,16 @@ def draw_matrices(game, turn):
                 (0, 0, 0),
                 pygame.Rect(x, y, square_size, square_size), 1
             )
-
+    # Pieces captured by black
     black_capture = get_captured_by_black()
     for pos, piece in black_capture.items():
         if piece["piece"] is not None:
-            draw_piece(game, piece["piece"], piece["pos"][1], piece["pos"][0], square_size, images)        
+            draw_piece(game, piece["piece"], piece["pos"][0], piece["pos"][1], square_size, images)        
             
 def draw_scene(game, images, turn):
-    screen.fill((255, 255, 255))  # Białe tło
-    draw_matrices(game, turn)  # Rysowanie bocznych kolumn
-    draw_board(game, images)  # Rysowanie głównej planszy
+    screen.fill((255, 255, 255))  
+    draw_matrices(game, turn) 
+    draw_board(game, images)  
 
 
 def draw_piece(game, piece, row, col, square_size, images):
@@ -204,7 +210,7 @@ def highlight_tile(row, col,color):
     col = col+3
     col = col * square_size
     row = row * square_size
-    pygame.draw.rect(screen, color, (col, row, square_size, square_size), 2)  # Grubsza krawędź dla podświetlenia
+    pygame.draw.rect(screen, color, (col, row, square_size, square_size), 2)  # it highlights the selected piece with a red rectangle
 
 
 def main():
@@ -225,15 +231,17 @@ def main():
     after_move = False
     running = True
     firstTime = True
+    takenfrom = ""
     ischeck = ""
     isWwin = False
-    isWbin = False
+    isBwin = False
     isWin = False
     while running:
         mouse_x, mouse_y = pygame.mouse.get_pos()
-        if firstTime:
+        if firstTime: # So the board is drawn only once at the beginning 
             pygame.display.flip()
-          
+        captured_by_black = get_captured_by_black() # to be able to refresh the captured pieces
+        captured_by_white = get_captured_by_white() # to be able to refresh the captured pieces
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                     running = False
@@ -244,6 +252,8 @@ def main():
                     grid_x = mouse_y  // square_size
                     grid_y = mouse_x  // square_size 
                     print (f"grid_x: {grid_x}, grid_y: {grid_y}")
+                    revive = False
+                    # check if the click was on a piece
                     for piece in game.get_piece_pos_board():
                         if piece["pos"] == [grid_x , grid_y -3]:
                             if piece["piece"][0] == turn:
@@ -253,17 +263,28 @@ def main():
                                 print(f"Selected piece: {selected_piece}")
                                 pygame.display.flip()
                             break
-                    for piece in game.get_piece_pos_capture():
-                        print(f"Selected piece: ajfoanefjklanefjqadiosfoadjnmol")
-                        if piece["pos"] == [grid_x , grid_y]:
-                            print(f"Selected piece: {piece}")
-                            print(f"Selected piece: {grid_x, grid_y}")
-                            if piece["piece"][0] == turn:
-                                dragging = True
-                                selected_piece = piece
-                                draw_scene(game, images, selected_piece)
-                                print(f"Selected piece: {selected_piece}")
-                                pygame.display.flip()
+                    # check if the click was on a captured piece
+                    for key, value in captured_by_white.items():
+                        if value["pos"] == (grid_x, grid_y) and value["piece"] is not None and value["piece"][0] == turn:
+                            selected_piece = value
+                            dragging = True
+                            takenfrom = "white"
+                            revive = True
+                            draw_board(game, images, selected_piece, revive)
+                            pygame.display.flip()
+                            print(f"Wybrano pionek {selected_piece['piece']} z captured_by_white.")
+                            break
+
+                    # check if the click was on a captured piece
+                    for key, value in captured_by_black.items():
+                        if value["pos"] == (grid_x, grid_y) and value["piece"] is not None and value["piece"][0] == turn:
+                            selected_piece = value
+                            dragging = True
+                            takenfrom = "black"
+                            revive = True
+                            draw_board(game, images, selected_piece, revive)
+                            pygame.display.flip()
+                            print(f"Wybrano pionek {selected_piece['piece']} z captured_by_black.")
                             break
 
                 elif event.type == pygame.MOUSEBUTTONUP:
@@ -271,19 +292,22 @@ def main():
                         grid_x = mouse_y // square_size
                         grid_y = mouse_x // square_size - 3
                         end_pos = (grid_x, grid_y)
-
+                    
                         print(f"Attempting to move to {end_pos}")
-                        if move_piece(game, selected_piece, end_pos):
+                        if move_piece(game, selected_piece, end_pos, revive):
                             turn = 'b' if turn == 'w' else 'w'
-                            
+                            if takenfrom == "white":
+                                captured_by_white = get_captured_by_white()
+                            elif takenfrom == "black":
+                                captured_by_black = get_captured_by_black()
                             print(f"Moved {selected_piece['piece']} to {end_pos}")
                         else:
                             print(f"Move failed for {selected_piece['piece']} to {end_pos}")
                         
                         dragging = False
                         selected_piece = None
-                        wCheckKing, wking_pos, isWwin= is_in_check(game.board, 'w', game)    
-                        bCheckKing, bking_pos, isWbin = is_in_check(game.board, 'b', game)
+                        wCheckKing, wking_pos, isBwin= is_in_check(game.board, 'w', game)    
+                        bCheckKing, bking_pos, isWwin = is_in_check(game.board, 'b', game)
                         if wCheckKing: 
                             ischeck = "White"
                         elif bCheckKing:
@@ -302,7 +326,7 @@ def main():
             pygame.display.flip()
             isWin = True
             show_victory_message("White won", main)
-        elif isWbin:
+        elif isBwin:
             pygame.display.flip()
             isWin = True
             show_victory_message("Black won", main)

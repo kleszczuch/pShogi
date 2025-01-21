@@ -9,7 +9,7 @@ class Bishop:
         row, col = current_pos
         moves = []
         if promotion:
-            moves = (promoted_moves.move(current_pos, board,promotion))
+            moves = (promoted_moves.move(current_pos, board,promotion)) # Promoted Bishop moves appends with king moves
 
         # Check diagonal moves
         for i in range(1, 9):

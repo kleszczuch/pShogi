@@ -11,11 +11,10 @@ class Knight:
             if promotion:
                 return promoted_moves.move(current_pos, board, promotion)
             else:
-                return [(row - 2, col - 1), (row - 2, col + 1)]  # Example moves for white knight
+                return [(row - 2, col - 1), (row - 2, col + 1)]  
         elif self.color == 'black':
             promoted_moves = GoldGeneral(color='black')
             if promotion:
                 return promoted_moves.move(current_pos, board, promotion)
             else:
-                return [(row + 2, col - 1), (row + 2, col + 1)]  # Example moves for black knight
-            
+                return [(row + 2, col - 1), (row + 2, col + 1)]             
