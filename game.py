@@ -1,8 +1,9 @@
 import pygame
-from game_logic.moves import move_piece, get_type_color_and_promotion, is_valid_move
+from game_logic.moves import move_piece, get_type_color_and_promotion, is_valid_move, get_revive_pos
 from game_logic.check import is_in_check
 from game_logic.caputuring_and_reviving import get_captured_by_black, get_captured_by_white
 from game_logic.victory import show_victory_message
+from game_logic.images_import import load_images
 
 WIDTH, HEIGHT = 1200, 720
 screen = pygame.display.set_mode([WIDTH, HEIGHT], pygame.SRCALPHA)
@@ -70,18 +71,6 @@ class GameState:
                     
         return pieces
 
-def load_images():
-    pieces = [
-    "wLance_NPY", "wKnight_NPY", "wSilver_NPY", "wGold", "wKing", "wRook_NPY", "wBishop_NPY", "wPawn_NPY",
-    "bLance_NPY", "bKnight_NPY", "bSilver_NPY", "bGold", "bKing", "bRook_NPY", "bBishop_NPY", "bPawn_NPY",
-    "wLance_P", "wKnight_P", "wSilver_P", "wRook_P", "wBishop_P", "wPawn_P",
-    "bLance_P", "bKnight_P", "bSilver_P", "bRook_P", "bBishop_P", "bPawn_P"
-]
-    
-    images = {}  # dictionary of images to be able to use them in the draw board function
-    for piece in pieces:
-        images[piece] = pygame.image.load(f"images/{piece}.png")
-    return images
 
 def draw_board(game, images, selected_piece=None, reviving=False):
     background_path = "images/background.png"
@@ -104,24 +93,25 @@ def draw_board(game, images, selected_piece=None, reviving=False):
                 draw_piece(game, piece, row, col + 3, square_size, images)
     
     # if selected_piece is not None, draw possible moves
-    if selected_piece and reviving == False:
+    if selected_piece:
         piece_name = selected_piece["piece"]
         start_pos = selected_piece["pos"]
         piece_class, color, promotion = get_type_color_and_promotion(selected_piece)
         piece = piece_class(color)
+    if selected_piece and not reviving:
         possible_moves = piece.move(start_pos, game.board, promotion)
     if reviving:
-        for row_idx in range(len(game.board)):
-            for col_idx in range(len(game.board[row_idx])):
-                if game.board[row_idx][col_idx] == " ":
-                    x = (col_idx + 3) * square_size + square_size // 2
-                    y = row_idx * square_size + square_size // 2
-                    pygame.draw.circle(
-                        game.screen,
-                        (0, 255, 0),
-                        (x, y),
-                        square_size // 6
-                    )
+        possible_moves = get_revive_pos(game, piece_name.split("_")[0])
+        for move in possible_moves:
+            row, col = move
+            x = (col + 3) * square_size + square_size // 2
+            y = row * square_size + square_size // 2
+            pygame.draw.circle(
+                game.screen,
+                (0, 255, 0),
+                (x, y),
+                square_size // 6
+            )
     else:
         for move in possible_moves:
             is_valid, target_piece = is_valid_move(game, color, move, selected_piece)
@@ -240,8 +230,6 @@ def main():
         mouse_x, mouse_y = pygame.mouse.get_pos()
         if firstTime: # So the board is drawn only once at the beginning 
             pygame.display.flip()
-        captured_by_black = get_captured_by_black() # to be able to refresh the captured pieces
-        captured_by_white = get_captured_by_white() # to be able to refresh the captured pieces
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                     running = False
@@ -251,7 +239,6 @@ def main():
                     
                     grid_x = mouse_y  // square_size
                     grid_y = mouse_x  // square_size 
-                    print (f"grid_x: {grid_x}, grid_y: {grid_y}")
                     revive = False
                     # check if the click was on a piece
                     for piece in game.get_piece_pos_board():
@@ -260,11 +247,10 @@ def main():
                                 dragging = True
                                 selected_piece = piece
                                 draw_board(game, images, selected_piece)
-                                print(f"Selected piece: {selected_piece}")
                                 pygame.display.flip()
                             break
                     # check if the click was on a captured piece
-                    for key, value in captured_by_white.items():
+                    for key, value in get_captured_by_white().items():
                         if value["pos"] == (grid_x, grid_y) and value["piece"] is not None and value["piece"][0] == turn:
                             selected_piece = value
                             dragging = True
@@ -272,11 +258,10 @@ def main():
                             revive = True
                             draw_board(game, images, selected_piece, revive)
                             pygame.display.flip()
-                            print(f"Wybrano pionek {selected_piece['piece']} z captured_by_white.")
                             break
 
                     # check if the click was on a captured piece
-                    for key, value in captured_by_black.items():
+                    for key, value in get_captured_by_black().items():
                         if value["pos"] == (grid_x, grid_y) and value["piece"] is not None and value["piece"][0] == turn:
                             selected_piece = value
                             dragging = True
@@ -284,7 +269,6 @@ def main():
                             revive = True
                             draw_board(game, images, selected_piece, revive)
                             pygame.display.flip()
-                            print(f"Wybrano pionek {selected_piece['piece']} z captured_by_black.")
                             break
 
                 elif event.type == pygame.MOUSEBUTTONUP:
@@ -292,18 +276,9 @@ def main():
                         grid_x = mouse_y // square_size
                         grid_y = mouse_x // square_size - 3
                         end_pos = (grid_x, grid_y)
-                    
-                        print(f"Attempting to move to {end_pos}")
                         if move_piece(game, selected_piece, end_pos, revive):
                             turn = 'b' if turn == 'w' else 'w'
-                            if takenfrom == "white":
-                                captured_by_white = get_captured_by_white()
-                            elif takenfrom == "black":
-                                captured_by_black = get_captured_by_black()
-                            print(f"Moved {selected_piece['piece']} to {end_pos}")
-                        else:
-                            print(f"Move failed for {selected_piece['piece']} to {end_pos}")
-                        
+                                            
                         dragging = False
                         selected_piece = None
                         wCheckKing, wking_pos, isBwin= is_in_check(game.board, 'w', game)    
@@ -338,4 +313,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

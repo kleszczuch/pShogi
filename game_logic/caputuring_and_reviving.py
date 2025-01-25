@@ -36,13 +36,7 @@ def capture_piece(piece):
                 if value["piece"] is None:  
                     value["piece"] = piece_to_capture  
                     break
-        print("Captured by White:")
-        for key, value in captured_by_white.items():
-            print(f"Pos: {value['pos']}, Piece: {value['piece']}")
-        print("Captured by Black:")
-        for key, value in captured_by_black.items():
-            print(f"Pos: {value['pos']}, Piece: {value['piece']}")  
-
+    
 def del_from_dict(color, start_pos):
     if color == "black":
         for key, value in captured_by_black.items():

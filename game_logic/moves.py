@@ -39,6 +39,49 @@ def get_type_color_and_promotion(piece):
     piece_class = piece_classes.get(type_of_piece) # get class of piece from list
     return  piece_class, color, promotion
 
+def get_revive_pos(game, piece_name): 
+    temp_table = []
+    enemy_king_color = "w" if piece_name[0] == "b" else "b"
+    enemy_king_pos = None
+    for row in range(9):
+        for col in range(9):
+            if game.board[row][col] == f"{enemy_king_color}King":
+                enemy_king_pos = (row, col)
+                break
+        if enemy_king_pos:
+            break
+
+    if piece_name.endswith("Pawn"): # There can not be 2 pawns in 1 column and pawn can not check king on revive move
+            possible_moves = []
+            for col in range(9):
+                clear_column = False
+                for row in range(9):
+                    piece_to_check = game.board[row][col]
+                    if piece_to_check == " " :
+                        if not clear_column:  
+                            if enemy_king_pos and (
+                            (enemy_king_color == 'w' and row == enemy_king_pos[0] - 1 and col == enemy_king_pos[1]) or
+                            (enemy_king_color == 'b' and row == enemy_king_pos[0] + 1 and col == enemy_king_pos[1])
+                            ):
+                                continue
+                            else:
+                                temp_table.append((row, col))
+                    elif piece_to_check.startswith(piece_name[0] + "Pawn"):
+                        clear_column = True  
+                        temp_table.clear()
+                        break
+                if temp_table:
+                    possible_moves.extend(temp_table)
+                    temp_table.clear()
+    else:
+            possible_moves = []
+            for row in range(9):
+                for col in range(9):
+                    if game.board[row][col] == " ":
+                        possible_moves.append((row, col))
+    return possible_moves
+
+
 def move_piece(game, selected_piece, end_pos, revive):
     piece_class, color, promotion = get_type_color_and_promotion(selected_piece)
     start_pos = selected_piece["pos"]
@@ -50,16 +93,11 @@ def move_piece(game, selected_piece, end_pos, revive):
     
     piece = piece_class(color)
     if revive:
-        possible_moves = []
-        for row in range(9):
-            for col in range(9):
-                if game.board[row][col] == " ":
-                    possible_moves.append((row, col))
+        possible_moves = get_revive_pos(game, piece_name)
         if end_pos in possible_moves:
             if want_and_able_to_promote(piece_name, end_pos[0], color, promotion): # check if promotion is possible and wanted
                 promoted_piece = f"{piece_name.split('_')[0]}_P" # update piece name to promote 
                 game.board[end_pos[0]][end_pos[1]] = promoted_piece
-                print(f"Promoted to {promoted_piece}")
             else:
                 game.board[end_pos[0]][end_pos[1]] = selected_piece["piece"]
             if color == "black":
@@ -75,7 +113,6 @@ def move_piece(game, selected_piece, end_pos, revive):
             game.board[start_pos[0]][start_pos[1]] = " "
             if want_and_able_to_promote(piece_name, end_pos[0], color, promotion): # check if promotion is possible and wanted
                 promoted_piece = f"{piece_name.split('_')[0]}_P" # update piece name to promote
-                print(f"Promoted to {promoted_piece}")
                 game.board[end_pos[0]][end_pos[1]] = promoted_piece
             else:
                 game.board[end_pos[0]][end_pos[1]] = selected_piece["piece"]
@@ -92,17 +129,11 @@ def get_all_valid_moves(selected_piece, board): # get all valid moves for select
     return piece.move(selected_piece["pos"], board, promotion)
 
 def is_valid_move(game, color, target_pos, selected_piece): # check if selected move is valid
-    piece_name = selected_piece["piece"]
-    start_pos = selected_piece["pos"]
-    
     if target_pos[0] < 0 or target_pos[0] > 9 or target_pos[1] < 0 or target_pos[1] > 9: # check if target position is on board
         return False, None
 
     possible_moves = get_all_valid_moves(selected_piece, game.board)
-    print(f"Possible moves in get all valid: {possible_moves}")
-    print(f"Target pos: {target_pos}")
     if target_pos in possible_moves:
-        print (f"Target pos in possible moves: {target_pos}")
         target_piece = game.board[target_pos[0]][target_pos[1]]
         if target_piece == " ":
             return True, None

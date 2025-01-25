@@ -27,7 +27,6 @@ def is_in_check(board, king_color, game):
         return False, winComunicate, isWin
 
     enemy_color = "b" if king_color == "w" else "w"
-    print(f"Sprawdzanie szacha dla króla {king_color} na pozycji {king_pos}")
     
     for row in range(9):
         for col in range(9):
