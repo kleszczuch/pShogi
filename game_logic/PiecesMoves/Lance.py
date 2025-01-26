@@ -8,9 +8,9 @@ class Lance:
         row, col = current_pos
         moves = []
         if self.color == 'white':
-            general = GoldGeneral(color = 'white')
+            promoted_moves = GoldGeneral(color='white')
             if promotion:
-                return general.move(current_pos, board, promotion) # Promoted pieces can move like a GoldGeneral
+                moves.extend(promoted_moves.move(current_pos, board, promotion))
             else:
                 for r in range(row - 1, -1, -1):
                     if board[r][col] == " ":
@@ -21,9 +21,9 @@ class Lance:
                         moves.append((r, col))
                         break
         elif self.color == 'black':
-            general = GoldGeneral(color = 'black')
+            promoted_moves = GoldGeneral(color='black')
             if promotion:
-                return general.move(current_pos, board, promotion)
+                moves.extend(promoted_moves.move(current_pos, board, promotion))
             else:
                 for r in range(row + 1, 9):
                     if board[r][col] == " ":

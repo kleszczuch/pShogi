@@ -68,11 +68,6 @@ class PromotionWindow:
         self.root.destroy()  # Close the window after the decision
 
 def want_and_able_to_promote(piece_name, piece_pos, color, promotion):
-    if promotion == "P":  # check if is already promoted
-        promotion = True
-    else:
-        promotion = False
-
     if piece_name.lower() != "king" and piece_name.lower() != "gold" and not promotion:
         if color == "white":
             if piece_pos <= 2:  # check if is able to promo

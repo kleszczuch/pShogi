@@ -89,8 +89,12 @@ def move_piece(game, selected_piece, end_pos, revive):
         piece_name, promotion = selected_piece["piece"].split("_") #to get promotion from piece name
     else:
         piece_name = selected_piece["piece"] #to get piece name if there is no promotion
-        promotion = None
-    
+        promotion = False
+
+    if promotion == "NPY":
+        promotion = False
+    else:
+        promotion = True
     piece = piece_class(color)
     if revive:
         possible_moves = get_revive_pos(game, piece_name)
@@ -108,7 +112,13 @@ def move_piece(game, selected_piece, end_pos, revive):
     else:
         possible_moves = piece.move(start_pos, game.board, promotion)
         can_move, target_piece = is_valid_move(game, color, end_pos, selected_piece)
-        
+        print("aoisdhnoashnd\n")
+        print(possible_moves)
+        print(end_pos)
+        print(can_move)
+        print(target_piece)
+        print("\naopisdhjnoilasjnmold")
+
         if end_pos in possible_moves and can_move:
             game.board[start_pos[0]][start_pos[1]] = " "
             if want_and_able_to_promote(piece_name, end_pos[0], color, promotion): # check if promotion is possible and wanted
