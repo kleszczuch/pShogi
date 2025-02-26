@@ -1,19 +1,18 @@
 import tkinter as tk
-import PIL
 from PIL import Image, ImageTk, ImageSequence
-import sys
-from game_logic.caputuring_and_reviving import *
+from game_logic.caputuring_and_reviving import captured_by_black, captured_by_white # Importing captured pieces
+from menu import Menu_class
 
-def show_victory_message(message,main):
+def show_victory_message(message,game_loop):
     def on_exit():
-        root.destroy()
-        sys.exit()
+        menu = Menu_class()
+        menu.create_widgets()
 
     def on_play_again():
         for key, value in captured_by_white.items(): value["piece"] = None # Reset captured pieces
         for key, value in captured_by_black.items(): value["piece"] = None # Reset captured pieces
         root.destroy()
-        main()  
+        game_loop()  
 
     root = tk.Tk()
     root.title("Victory!")
