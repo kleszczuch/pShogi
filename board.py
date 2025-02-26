@@ -11,7 +11,7 @@ BLACK = (0, 0, 0)
 GREEN = (0, 255, 0)
 GRAY = (128, 128, 128)
 RED = (255, 0, 0)
-TRANSCULCENT_RED = (255, 0, 0, 128)
+TRANSLUCENT_RED = (255, 0, 0, 128)
 square_size = 80
 
 class GameState:

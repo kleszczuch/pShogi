@@ -1,5 +1,5 @@
 import pygame
-from board import TRANSCULCENT_RED, GameState, draw_board, draw_scene, highlight_tile, screen
+from board import TRANSLUCENT_RED, GameState, draw_board, draw_scene, highlight_tile, screen
 from game_logic.moves import move_piece, get_type_color_and_promotion, is_valid_move, get_revive_pos
 from game_logic.check import is_in_check
 from game_logic.caputuring_and_reviving import get_captured_by_black, get_captured_by_white
@@ -98,9 +98,9 @@ class Game_class:
             screen.fill((255, 255, 255, 0))
             draw_scene(game, images, turn)
             if ischeck == "White":
-                highlight_tile(wking_pos[0],wking_pos[1], TRANSCULCENT_RED) 
+                highlight_tile(wking_pos[0],wking_pos[1], TRANSLUCENT_RED) 
             elif ischeck == "Black":
-                highlight_tile(bking_pos[0],bking_pos[1], TRANSCULCENT_RED)
+                highlight_tile(bking_pos[0],bking_pos[1], TRANSLUCENT_RED)
             elif isWwin:
                 pygame.display.flip()
                 isWin = True
